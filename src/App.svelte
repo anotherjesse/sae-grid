@@ -17,13 +17,13 @@
   });
 
   async function loadFeatureMap() {
-    const response = await fetch("/data/autointerp.json");
+    const response = await fetch("./data/autointerp.json");
     const rawData = await response.json();
     featureMap = Object.fromEntries(rawData.map(([desc, key]) => [key, desc]));
   }
 
   async function loadRuns() {
-    const response = await fetch("/data/index.json");
+    const response = await fetch("./data/index.json");
     let allRuns = await response.json();
     runs = allRuns.filter((run) => run.prompt);
 
@@ -33,7 +33,7 @@
   }
 
   async function loadRunData() {
-    const response = await fetch(`/data/${selectedRun}.json`);
+    const response = await fetch(`./data/${selectedRun}.json`);
     runData = await response.json();
     // Update URL hash when run is loaded
     window.location.hash = selectedRun;

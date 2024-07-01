@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build-index": "node src/build_index.js",
-    "build": "vite build",
+    "build": "vite build --base=/sae-grid/ --outDir=docs",
     "preview": "vite preview"
   },
   "devDependencies": {
