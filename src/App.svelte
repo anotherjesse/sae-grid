@@ -1,47 +1,53 @@
 <script>
-  import svelteLogo from './assets/svelte.svg'
-  import viteLogo from '/vite.svg'
-  import Counter from './lib/Counter.svelte'
+  import { onMount } from 'svelte';
+  import Text from './lib/Text.svelte';
+
+  let featureMap = {};
+  let runs = [];
+  let selectedRun = null;
+  let runData = {};
+
+  onMount(async () => {
+      await Promise.all([loadFeatureMap(), loadRuns()]);
+  });
+
+  async function loadFeatureMap() {
+      const response = await fetch('/data/autointerp.json');
+      const rawData = await response.json();
+      featureMap = Object.fromEntries(rawData.map(([desc, key]) => [key, desc]));
+  }
+
+  async function loadRuns() {
+      const response = await fetch('/data/index.json');
+      let allRuns = await response.json();
+      runs = allRuns.filter(run => run.prompt);
+      if (runs.length > 0 && !selectedRun) {
+          // Select a random run ID
+          selectedRun = runs[Math.floor(Math.random() * runs.length)].id;
+      }
+  }
+
+  async function loadRunData() {
+      const response = await fetch(`/data/${selectedRun}.json`);
+      runData = await response.json();
+  }
+
+  $: if (selectedRun) { loadRunData(); }
 </script>
 
-<main>
-  <div>
-    <a href="https://vitejs.dev" target="_blank" rel="noreferrer">
-      <img src={viteLogo} class="logo" alt="Vite Logo" />
-    </a>
-    <a href="https://svelte.dev" target="_blank" rel="noreferrer">
-      <img src={svelteLogo} class="logo svelte" alt="Svelte Logo" />
-    </a>
-  </div>
-  <h1>Vite + Svelte</h1>
+<svelte:head>
+  <title>Client-Side Only Page</title>
+</svelte:head>
 
-  <div class="card">
-    <Counter />
-  </div>
+<h2>Runs:</h2>
+<select bind:value={selectedRun}>
+  <option value={null}>Select a run</option>
+  {#each runs as run}
+      <option value={run.id} disabled={!run.ready}>{run.prompt.slice(0, 40) || run.id}</option>
+  {/each}
+</select>
 
-  <p>
-    Check out <a href="https://github.com/sveltejs/kit#readme" target="_blank" rel="noreferrer">SvelteKit</a>, the official Svelte app framework powered by Vite!
-  </p>
 
-  <p class="read-the-docs">
-    Click on the Vite and Svelte logos to learn more
-  </p>
-</main>
-
-<style>
-  .logo {
-    height: 6em;
-    padding: 1.5em;
-    will-change: filter;
-    transition: filter 300ms;
-  }
-  .logo:hover {
-    filter: drop-shadow(0 0 2em #646cffaa);
-  }
-  .logo.svelte:hover {
-    filter: drop-shadow(0 0 2em #ff3e00aa);
-  }
-  .read-the-docs {
-    color: #888;
-  }
-</style>
+{#if runData && featureMap}
+  <Text run={runData} featureMap={featureMap} />
+{/if}
