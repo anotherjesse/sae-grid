@@ -11,8 +11,8 @@ async function buildIndex() {
             const filePath = path.join(dataDir, file);
             const fileContent = await fs.readFile(filePath, 'utf-8');
             const data = JSON.parse(fileContent);
-            return { 
-                id, 
+            return {
+                id,
                 prompt: data.prompt,
                 ready: !!data.response
             };

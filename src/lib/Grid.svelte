@@ -4,8 +4,8 @@
     export let featureMap;
     export let selectedFeature;
     let size = 3;
-    let token_min_seen_qty = 1;
-    let min_strength = 20.0;
+    let token_min_seen_qty = 3;
+    let min_strength = 3.0;
     let uniq_features = [];
     let count_features = {};
     let isVertical = false;
@@ -34,7 +34,7 @@
     function getColor(feature, strength) {
       const hue = Math.abs(hashCode(feature.toString()) % 360);
       const saturation = "100";
-      const value = 100 * (strength / 20);
+      const value = Math.max(50 * (strength / 20), 50);
   
       return `hsl(${hue}, ${saturation}%, ${value}%)`;
     }

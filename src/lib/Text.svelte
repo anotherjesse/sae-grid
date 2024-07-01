@@ -1,16 +1,16 @@
 <script>
-    import Grid from './Grid.svelte';
+    import Grid from "./Grid.svelte";
 
     export let featureMap;
     export let run;
     export let selectedTokIdx = null;
     export let selectedFeature = null;
 
-    $: text = run.response && run.response[0] || [];
-    $:console.log({text})
+    $: text = (run.response && run.response[0]) || [];
+    $: console.log({ text });
 
     function formatText(element) {
-        return element[0].replace(/\n/g, '<br>');
+        return element[0].replace(/\n/g, "<br>");
     }
 
     function strengthOf(element, featureId) {
@@ -19,7 +19,9 @@
 
     function getBackgroundColor(strength) {
         const intensity = Math.min(Math.abs(strength / 10) * 255, 255);
-        return strength > 0 ? `rgba(0, 255, 0, ${intensity / 255})` : `rgba(255, 0, 0, ${intensity / 255})`;
+        return strength > 0
+            ? `rgba(0, 255, 0, ${intensity / 255})`
+            : `rgba(255, 0, 0, ${intensity / 255})`;
     }
 
     function handleHover(index) {
@@ -36,22 +38,25 @@
         {#each text as element, index}
             <span
                 class:selected={selectedTokIdx === index}
-                style="background-color: {selectedFeature !== null ? getBackgroundColor(strengthOf(element, selectedFeature)) : 'transparent'};"
+                style="background-color: {selectedFeature !== null
+                    ? getBackgroundColor(strengthOf(element, selectedFeature))
+                    : 'transparent'};"
                 on:mouseenter={() => handleHover(index)}
                 on:mouseleave={handleMouseLeave}
-            >{@html formatText(element)}</span>
+                >{@html formatText(element)}</span
+            >
         {/each}
     </div>
 
     <div class="flex-1">
-        <Grid text={text} bind:selectedTokIdx featureMap={featureMap} bind:selectedFeature />
+        <Grid {text} bind:selectedTokIdx {featureMap} bind:selectedFeature />
     </div>
 </div>
 
 <style>
     .selected {
         border: 2px solid black;
-        padding: -2px
+        padding: -2px;
     }
 
     .text {
