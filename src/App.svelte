@@ -1,11 +1,12 @@
 <script>
   import "./app.css";
   import { onMount } from "svelte";
-  import Text from "./lib/Text.svelte";
+  import Grid from "./lib/Grid.svelte";
   let featureMap = {};
   let runs = [];
   let selectedRun = null;
   let runData = {};
+  let showSelector = false;
 
   onMount(async () => {
     await Promise.all([loadFeatureMap(), loadRuns()]);
@@ -60,29 +61,39 @@
 </script>
 
 <svelte:head>
-  <title>Client-Side Only Page</title>
+  <title>SAE Feature Grid</title>
 </svelte:head>
 
-<main class="min-h-screen bg-gray-50 py-8">
+<main class="min-h-screen bg-gray-50 py-4">
   <div class="w-full px-4">
-    <h1 class="text-3xl font-bold mb-6">Feature Visualization</h1>
-    
-    <div class="mb-8">
-      <label for="run-select" class="block text-sm font-medium text-gray-700 mb-2">Select a run:</label>
-      <select
-        id="run-select"
-        bind:value={selectedRun}
-        class="block w-full max-w-md px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-      >
-        <option value={null}>Select a run</option>
-        {#each runs as run}
-          <option value={run.id} disabled={!run.ready}>{run.prompt.slice(0, 40) || run.id}</option>
-        {/each}
-      </select>
+    <div class="flex justify-between items-center mb-4">
+      <h1 class="text-2xl font-bold">Feature Visualization</h1>
+      <div class="relative">
+        <button
+          on:click={() => showSelector = !showSelector}
+          class="px-3 py-1 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+        >
+          Select Run
+        </button>
+        {#if showSelector}
+          <div class="absolute right-0 mt-2 w-64 bg-white border border-gray-300 rounded-md shadow-lg z-10">
+            <select
+              bind:value={selectedRun}
+              on:change={() => showSelector = false}
+              class="block w-full px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value={null}>Select a run</option>
+              {#each runs as run}
+                <option value={run.id} disabled={!run.ready}>{run.prompt.slice(0, 40) || run.id}</option>
+              {/each}
+            </select>
+          </div>
+        {/if}
+      </div>
     </div>
 
     {#if runData && featureMap}
-      <Text run={runData} {featureMap}></Text>
+      <Grid run={runData} {featureMap}></Grid>
     {/if}
   </div>
 </main>

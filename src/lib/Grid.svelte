@@ -1,8 +1,9 @@
 <script>
     export let text;
-    export let selectedTokIdx;
+    export let selectedTokIdx = null;
+    export let selectedFeature = null;
     export let featureMap;
-    export let selectedFeature;
+    export let run;
     let size = 3;
     let token_min_seen_qty = 3;
     let min_strength = 3.0;
@@ -10,11 +11,6 @@
     let count_features = {};
     let isVertical = false;
     let histogram;
-    export let formatText;
-    export let strengthOf;
-    export let getBackgroundColor;
-    export let handleHover;
-    export let handleMouseLeave;
 
     $: strong_features = text
         .map(([tok, fs]) =>
@@ -63,22 +59,36 @@
 
     $: console.log({ histogram });
 
+    // Improved color generation
     function getColor(feature, strength) {
-        const hue = Math.abs(hashCode(feature.toString()) % 360);
-        const saturation = "100";
-        const value = Math.max(50 * (strength / 20), 50);
-
-        return `hsl(${hue}, ${saturation}%, ${value}%)`;
+        const hash = feature.toString().split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        const hue = (hash * 137.5) % 360; // Use golden angle approximation for better distribution
+        const saturation = 70 + (hash % 30); // Vary saturation between 70% and 100%
+        const lightness = Math.max(40, Math.min(80, 50 + (strength * 2))); // Adjust lightness based on strength
+        return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
     }
 
-    function hashCode(str) {
-        let hash = 0;
-        for (let i = 0; i < str.length; i++) {
-            const char = str.charCodeAt(i);
-            hash = (hash << 5) - hash + char;
-            hash = hash & hash;
-        }
-        return hash;
+    // Simplified text formatting
+    const formatText = (element) => element[0].replace(/\n/g, "<br>");
+
+    // Simplified strength retrieval
+    const strengthOf = (element, featureId) => element[1][featureId] || 0;
+
+    // Simplified background color generation
+    function getBackgroundColor(strength) {
+        const intensity = Math.min(Math.abs(strength / 10), 1);
+        return strength > 0 ? `rgba(0, 255, 0, ${intensity})` : `rgba(255, 0, 0, ${intensity})`;
+    }
+
+    $: text = (run.response && run.response[0]) || [];
+    $: console.log({ text });
+
+    function handleHover(index) {
+        selectedTokIdx = index;
+    }
+
+    function handleMouseLeave() {
+        selectedTokIdx = null;
     }
 </script>
 
@@ -192,7 +202,7 @@
             <svg
                 width={isVertical ? filtered_features.length * size / 2 : text.length * size / 2}
                 height={isVertical ? text.length * size / 2 : filtered_features.length * size / 2}
-                class="border border-gray-300 rounded-md w-full"
+                class="border border-gray-300 rounded-md w-full p-2"
             >
                 {#if selectedFeature}
                     <rect
