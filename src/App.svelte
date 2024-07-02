@@ -64,7 +64,7 @@
 </svelte:head>
 
 <main class="min-h-screen bg-gray-50 py-8">
-  <div class="max-w-7xl mx-auto px-4">
+  <div class="w-full px-4">
     <h1 class="text-3xl font-bold mb-6">Feature Visualization</h1>
     
     <div class="mb-8">
