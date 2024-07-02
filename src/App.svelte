@@ -63,16 +63,26 @@
   <title>Client-Side Only Page</title>
 </svelte:head>
 
-<h2>Runs:</h2>
-<select bind:value={selectedRun}>
-  <option value={null}>Select a run</option>
-  {#each runs as run}
-    <option value={run.id} disabled={!run.ready}
-      >{run.prompt.slice(0, 40) || run.id}</option
-    >
-  {/each}
-</select>
+<main class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-7xl mx-auto px-4">
+    <h1 class="text-3xl font-bold mb-6">Feature Visualization</h1>
+    
+    <div class="mb-8">
+      <label for="run-select" class="block text-sm font-medium text-gray-700 mb-2">Select a run:</label>
+      <select
+        id="run-select"
+        bind:value={selectedRun}
+        class="block w-full max-w-md px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+      >
+        <option value={null}>Select a run</option>
+        {#each runs as run}
+          <option value={run.id} disabled={!run.ready}>{run.prompt.slice(0, 40) || run.id}</option>
+        {/each}
+      </select>
+    </div>
 
-{#if runData && featureMap}
-  <Text run={runData} {featureMap}></Text>
-{/if}
+    {#if runData && featureMap}
+      <Text run={runData} {featureMap}></Text>
+    {/if}
+  </div>
+</main>
