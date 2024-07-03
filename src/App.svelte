@@ -10,10 +10,12 @@
 
   onMount(async () => {
     await Promise.all([loadFeatureMap(), loadRuns()]);
-    // Load run from URL hash if present
+    // Load run from URL hash if present, otherwise show selector
     const hashRun = window.location.hash.slice(1);
-    if (hashRun && runs.some(run => run.id === hashRun)) {
+    if (hashRun && runs.some((run) => run.id === hashRun)) {
       selectedRun = hashRun;
+    } else {
+      showSelector = true;
     }
   });
 
@@ -27,10 +29,6 @@
     const response = await fetch("./data/index.json");
     let allRuns = await response.json();
     runs = allRuns.filter((run) => run.prompt);
-
-    if (runs.length > 0 && !selectedRun) {
-      selectedRun = runs[0].id;
-    }
   }
 
   async function loadRunData() {
@@ -43,20 +41,24 @@
   // Listen for hash changes
   function handleHashChange() {
     const hashRun = window.location.hash.slice(1);
-    if (hashRun && runs.some(run => run.id === hashRun)) {
+    if (hashRun && runs.some((run) => run.id === hashRun)) {
       selectedRun = hashRun;
     }
   }
 
   onMount(() => {
-    window.addEventListener('hashchange', handleHashChange);
+    window.addEventListener("hashchange", handleHashChange);
     return () => {
-      window.removeEventListener('hashchange', handleHashChange);
+      window.removeEventListener("hashchange", handleHashChange);
     };
   });
 
   $: if (selectedRun) {
     loadRunData();
+  }
+
+  function handleSwitchText() {
+    showSelector = true;
   }
 </script>
 
@@ -64,36 +66,39 @@
   <title>SAE Feature Grid</title>
 </svelte:head>
 
-<main class="min-h-screen bg-gray-50 py-4">
-  <div class="w-full px-4">
-    <div class="flex justify-between items-center mb-4">
-      <h1 class="text-2xl font-bold">Feature Visualization</h1>
-      <div class="relative">
+{#if runData && featureMap}
+  <Grid run={runData} {featureMap} on:switchText={handleSwitchText}></Grid>
+{/if}
+
+{#if showSelector}
+  <div
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+  >
+    <div class="bg-white rounded-lg p-6 w-full max-w-2xl">
+      <h2 class="text-xl font-bold mb-4">Select a text</h2>
+      <p class="mb-4 text-gray-600">
+        Visualize activated SAE features for different text prompts.
+      </p>
+      <select
+        bind:value={selectedRun}
+        on:change={() => (showSelector = false)}
+        class="block w-full px-3 py-2 mb-4 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        <option value={null}>Select a run</option>
+        {#each runs as run}
+          <option value={run.id} disabled={!run.ready}
+            >{run.prompt.slice(0, 40) || run.id}</option
+          >
+        {/each}
+      </select>
+      <div class="flex justify-end">
         <button
-          on:click={() => showSelector = !showSelector}
-          class="px-3 py-1 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+          on:click={() => (showSelector = false)}
+          class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md text-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50"
         >
-          Select Run
+          Close
         </button>
-        {#if showSelector}
-          <div class="absolute right-0 mt-2 w-64 bg-white border border-gray-300 rounded-md shadow-lg z-10">
-            <select
-              bind:value={selectedRun}
-              on:change={() => showSelector = false}
-              class="block w-full px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value={null}>Select a run</option>
-              {#each runs as run}
-                <option value={run.id} disabled={!run.ready}>{run.prompt.slice(0, 40) || run.id}</option>
-              {/each}
-            </select>
-          </div>
-        {/if}
       </div>
     </div>
-
-    {#if runData && featureMap}
-      <Grid run={runData} {featureMap}></Grid>
-    {/if}
   </div>
-</main>
+{/if}

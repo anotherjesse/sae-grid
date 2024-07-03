@@ -1,9 +1,11 @@
 <script>
-    export let text;
-    export let selectedTokIdx = null;
-    export let selectedFeature = null;
     export let featureMap;
     export let run;
+
+    $: text = (run.response && run.response[0]) || [];
+
+    let selectedTokIdx = null;
+    let selectedFeature = null;
     let size = 3;
     let token_min_seen_qty = 3;
     let min_strength = 3.0;
@@ -11,6 +13,9 @@
     let count_features = {};
     let isVertical = false;
     let histogram;
+
+    import { createEventDispatcher } from "svelte";
+    const dispatch = createEventDispatcher();
 
     $: strong_features = text
         .map(([tok, fs]) =>
@@ -57,52 +62,43 @@
         return histogram;
     }
 
-    $: console.log({ histogram });
-
-    // Improved color generation
     function getColor(feature, strength) {
-        const hash = feature.toString().split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-        const hue = (hash * 137.5) % 360; // Use golden angle approximation for better distribution
-        const saturation = 70 + (hash % 30); // Vary saturation between 70% and 100%
-        const lightness = Math.max(40, Math.min(80, 50 + (strength * 2))); // Adjust lightness based on strength
+        const hash = feature
+            .toString()
+            .split("")
+            .reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        const hue = (hash * 137.5) % 360;
+        const saturation = 70 + (hash % 30);
+        const lightness = Math.max(40, Math.min(80, 50 + strength * 2));
         return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
     }
 
-    // Simplified text formatting
     const formatText = (element) => element[0].replace(/\n/g, "<br>");
 
-    // Simplified strength retrieval
     const strengthOf = (element, featureId) => element[1][featureId] || 0;
 
-    // Simplified background color generation
     function getBackgroundColor(strength) {
         const intensity = Math.min(Math.abs(strength / 10), 1);
-        return strength > 0 ? `rgba(0, 255, 0, ${intensity})` : `rgba(255, 0, 0, ${intensity})`;
-    }
-
-    $: text = (run.response && run.response[0]) || [];
-    $: console.log({ text });
-
-    function handleHover(index) {
-        selectedTokIdx = index;
-    }
-
-    function handleMouseLeave() {
-        selectedTokIdx = null;
+        return strength > 0
+            ? `rgba(0, 255, 0, ${intensity})`
+            : `rgba(255, 0, 0, ${intensity})`;
     }
 </script>
 
 <div class="fixed top-0 left-0 right-0 bg-white shadow-md z-10 p-4">
     <div class="flex flex-wrap items-center gap-4 max-w-7xl mx-auto">
         <button
-            class="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
             on:click={() => (isVertical = !isVertical)}
+            title="Token direction"
         >
-            {isVertical ? "🔽" : "➡️"}
+            {isVertical ? "⬇️" : "️➡️"}
         </button>
         <div class="flex items-center gap-4">
             <div class="flex items-center gap-2">
-                <label for="size-input" class="text-sm font-medium text-gray-700">Grid Size:</label>
+                <label
+                    for="size-input"
+                    class="text-sm font-medium text-gray-700">Grid Size:</label
+                >
                 <input
                     type="number"
                     id="size-input"
@@ -113,7 +109,11 @@
                 />
             </div>
             <div class="flex items-center gap-2">
-                <label for="min-strength-input" class="text-sm font-medium text-gray-700">Min Strength:</label>
+                <label
+                    for="min-strength-input"
+                    class="text-sm font-medium text-gray-700"
+                    >Min Strength:</label
+                >
                 <input
                     type="number"
                     id="min-strength-input"
@@ -125,7 +125,10 @@
                 />
             </div>
             <div class="flex items-center gap-2">
-                <label for="min-seen-input" class="text-sm font-medium text-gray-700">Min Seen:</label>
+                <label
+                    for="min-seen-input"
+                    class="text-sm font-medium text-gray-700">Min Seen:</label
+                >
                 <input
                     type="number"
                     id="min-seen-input"
@@ -141,7 +144,9 @@
                 {#if histogram}
                     <svg width={100} height={40}>
                         {#each Object.entries(histogram) as [bin, count]}
-                            {@const x = (Number(bin) / Object.keys(histogram).length) * 100}
+                            {@const x =
+                                (Number(bin) / Object.keys(histogram).length) *
+                                100}
                             {@const height = (count / histogram.max_count) * 40}
                             <rect
                                 {x}
@@ -150,7 +155,12 @@
                                 {height}
                                 fill="steelblue"
                             >
-                                <title>Strength: {(Number(bin) * histogram.bin_size + histogram.min).toFixed(2)}, Count: {count}</title>
+                                <title
+                                    >Strength: {(
+                                        Number(bin) * histogram.bin_size +
+                                        histogram.min
+                                    ).toFixed(2)}, Count: {count}</title
+                                >
                             </rect>
                         {/each}
                     </svg>
@@ -171,7 +181,9 @@
                             {selectedFeature}
                         </a>
                     </p>
-                    <p class="text-sm text-gray-600 whitespace-nowrap overflow-hidden text-ellipsis">
+                    <p
+                        class="text-sm text-gray-600 whitespace-nowrap overflow-hidden text-ellipsis"
+                    >
                         {featureMap[selectedFeature]}
                     </p>
                 </div>
@@ -183,46 +195,68 @@
 <div class="mt-24 flex flex-col items-center w-full">
     <div class="w-full flex flex-col md:flex-row gap-8">
         <div class="w-full md:w-1/3">
-            <h2 class="text-2xl font-bold mb-4">Text</h2>
+            <h2 class="text-2xl font-bold mb-4">
+                Text <button on:click={() => dispatch("switchText")}> 📝 </button>
+            </h2>
             <div class="text-content bg-gray-100 p-4 rounded-md">
                 {#each text as element, index}
                     <span
-                        class="transition-colors duration-300 ease-in-out {selectedTokIdx === index ? 'border-2 border-black' : ''}"
+                        class="transition-colors duration-300 ease-in-out {selectedTokIdx ===
+                        index
+                            ? 'border-2 border-black'
+                            : ''}"
                         style="background-color: {selectedFeature !== null
-                            ? getBackgroundColor(strengthOf(element, selectedFeature))
+                            ? getBackgroundColor(
+                                  strengthOf(element, selectedFeature),
+                              )
                             : 'transparent'};"
-                        on:mouseenter={() => handleHover(index)}
-                        on:mouseleave={handleMouseLeave}
-                    >{@html formatText(element)}</span>
+                        on:mouseenter={() => (selectedTokIdx = index)}
+                        on:mouseleave={() => (selectedTokIdx = null)}
+                        >{@html formatText(element)}</span
+                    >
                 {/each}
             </div>
         </div>
         <div class="w-full md:w-2/3">
             <h2 class="text-2xl font-bold mb-4">Feature Grid</h2>
             <svg
-                width={isVertical ? filtered_features.length * size / 2 : text.length * size / 2}
-                height={isVertical ? text.length * size / 2 : filtered_features.length * size / 2}
+                width={isVertical
+                    ? (filtered_features.length * size) / 2
+                    : (text.length * size) / 2}
+                height={isVertical
+                    ? (text.length * size) / 2
+                    : (filtered_features.length * size) / 2}
                 class="border border-gray-300 rounded-md w-full p-2"
             >
                 {#if selectedFeature}
                     <rect
                         x={isVertical
-                            ? filtered_features.indexOf(selectedFeature) * size / 2
+                            ? (filtered_features.indexOf(selectedFeature) *
+                                  size) /
+                              2
                             : 0}
                         y={isVertical
                             ? 0
-                            : filtered_features.indexOf(selectedFeature) * size / 2}
-                        width={isVertical ? size / 2 : text.length * size / 2}
-                        height={isVertical ? text.length * size / 2 : size / 2}
+                            : (filtered_features.indexOf(selectedFeature) *
+                                  size) /
+                              2}
+                        width={isVertical ? size / 2 : (text.length * size) / 2}
+                        height={isVertical
+                            ? (text.length * size) / 2
+                            : size / 2}
                         fill="hsl(0, 0%, 95%)"
                     />
                 {/if}
                 {#if selectedTokIdx}
                     <rect
-                        x={isVertical ? 0 : selectedTokIdx * size / 2}
-                        y={isVertical ? selectedTokIdx * size / 2 : 0}
-                        width={isVertical ? filtered_features.length * size / 2 : size / 2}
-                        height={isVertical ? size / 2 : filtered_features.length * size / 2}
+                        x={isVertical ? 0 : (selectedTokIdx * size) / 2}
+                        y={isVertical ? (selectedTokIdx * size) / 2 : 0}
+                        width={isVertical
+                            ? (filtered_features.length * size) / 2
+                            : size / 2}
+                        height={isVertical
+                            ? size / 2
+                            : (filtered_features.length * size) / 2}
                         fill="hsl(0, 0%, 95%)"
                     />
                 {/if}
@@ -233,8 +267,12 @@
                             <rect
                                 role="cell"
                                 tabindex="0"
-                                x={isVertical ? featIdx * size / 2 : textIdx * size / 2}
-                                y={isVertical ? textIdx * size / 2 : featIdx * size / 2}
+                                x={isVertical
+                                    ? (featIdx * size) / 2
+                                    : (textIdx * size) / 2}
+                                y={isVertical
+                                    ? (textIdx * size) / 2
+                                    : (featIdx * size) / 2}
                                 width={size / 2}
                                 height={size / 2}
                                 fill={getColor(feature, strength)}
