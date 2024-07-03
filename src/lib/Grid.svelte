@@ -1,10 +1,10 @@
 <script>
     export let featureMap;
-    export let text=[];
+    export let text = [];
 
     let selectedTokIdx = null;
     let selectedFeature = null;
-    let size = 3;
+    let size = 5;
     let token_min_seen_qty = 3;
     let min_strength = 3.0;
     let uniq_features = [];
@@ -15,7 +15,7 @@
     import { createEventDispatcher } from "svelte";
     const dispatch = createEventDispatcher();
 
-    $: console.log({text})
+    $: console.log({ text });
 
     $: strong_features = text
         .map(([tok, fs]) =>
@@ -83,7 +83,38 @@
             ? `rgba(0, 255, 0, ${intensity})`
             : `rgba(255, 0, 0, ${intensity})`;
     }
+
+    function handleKeydown(event) {
+        if (!event.shiftKey) return;
+        if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+            event.preventDefault();
+            const currentIndex = filtered_features.indexOf(selectedFeature);
+            if (currentIndex !== -1) {
+                const newIndex =
+                    event.key === "ArrowUp"
+                        ? (currentIndex - 1 + filtered_features.length) %
+                          filtered_features.length
+                        : (currentIndex + 1) % filtered_features.length;
+                selectedFeature = filtered_features[newIndex];
+            } else if (filtered_features.length > 0) {
+                selectedFeature = filtered_features[0];
+            }
+        } else if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+            event.preventDefault();
+            if (selectedTokIdx !== null) {
+                selectedTokIdx =
+                    event.key === "ArrowLeft"
+                        ? (selectedTokIdx - 1 + text.length) % text.length
+                        : (selectedTokIdx + 1) % text.length;
+            } else {
+                selectedTokIdx =
+                    event.key === "ArrowLeft" ? text.length - 1 : 0;
+            }
+        }
+    }
 </script>
+
+<svelte:window on:keydown={handleKeydown} />
 
 <div class="fixed top-0 left-0 right-0 bg-white shadow-md z-10 p-4">
     <div class="flex flex-wrap items-center gap-4 max-w-7xl mx-auto">
@@ -196,7 +227,9 @@
     <div class="w-full flex flex-col md:flex-row gap-8">
         <div class="w-full md:w-1/3">
             <h2 class="text-2xl font-bold mb-4">
-                Text <button on:click={() => dispatch("switchText")}> 📝 </button>
+                Text <button on:click={() => dispatch("switchText")}>
+                    📝
+                </button>
             </h2>
             <div class="text-content bg-gray-100 p-4 rounded-md">
                 {#each text as element, index}
@@ -221,42 +254,40 @@
             <h2 class="text-2xl font-bold mb-4">Feature Grid</h2>
             <svg
                 width={isVertical
-                    ? (filtered_features.length * size) / 2
-                    : (text.length * size) / 2}
+                    ? (filtered_features.length * size) 
+                    : (text.length * size)}
                 height={isVertical
-                    ? (text.length * size) / 2
-                    : (filtered_features.length * size) / 2}
+                    ? (text.length * size) 
+                    : (filtered_features.length * size)}
                 class="border border-gray-300 rounded-md w-full p-2"
             >
                 {#if selectedFeature}
                     <rect
                         x={isVertical
                             ? (filtered_features.indexOf(selectedFeature) *
-                                  size) /
-                              2
+                                  size) 
                             : 0}
                         y={isVertical
                             ? 0
                             : (filtered_features.indexOf(selectedFeature) *
-                                  size) /
-                              2}
-                        width={isVertical ? size / 2 : (text.length * size) / 2}
+                                  size)}
+                        width={isVertical ? size : (text.length * size)}
                         height={isVertical
-                            ? (text.length * size) / 2
-                            : size / 2}
+                            ? (text.length * size) 
+                            : size}
                         fill="hsl(0, 0%, 95%)"
                     />
                 {/if}
                 {#if selectedTokIdx}
                     <rect
-                        x={isVertical ? 0 : (selectedTokIdx * size) / 2}
-                        y={isVertical ? (selectedTokIdx * size) / 2 : 0}
+                        x={isVertical ? 0 : (selectedTokIdx * size)}
+                        y={isVertical ? (selectedTokIdx * size) : 0}
                         width={isVertical
-                            ? (filtered_features.length * size) / 2
-                            : size / 2}
+                            ? (filtered_features.length * size) 
+                            : size}
                         height={isVertical
-                            ? size / 2
-                            : (filtered_features.length * size) / 2}
+                            ? size
+                            : (filtered_features.length * size)}
                         fill="hsl(0, 0%, 95%)"
                     />
                 {/if}
@@ -268,24 +299,24 @@
                                 role="cell"
                                 tabindex="0"
                                 x={isVertical
-                                    ? (featIdx * size) / 2
-                                    : (textIdx * size) / 2}
+                                    ? (featIdx * size) 
+                                    : (textIdx * size)}
                                 y={isVertical
-                                    ? (textIdx * size) / 2
-                                    : (featIdx * size) / 2}
-                                width={size / 2}
-                                height={size / 2}
+                                    ? (textIdx * size) 
+                                    : (featIdx * size)}
+                                width={size}
+                                height={size}
                                 fill={getColor(feature, strength)}
                                 aria-label={`Feature ${feature} for token ${tok} with strength ${strength}`}
+                                on:focus={() => {
+                                    selectedTokIdx = textIdx;
+                                    selectedFeature = feature;
+                                }}
                                 on:mouseenter={(event) => {
                                     if (event.shiftKey) {
                                         selectedTokIdx = textIdx;
                                         selectedFeature = feature;
                                     }
-                                }}
-                                on:focus={() => {
-                                    selectedTokIdx = textIdx;
-                                    selectedFeature = feature;
                                 }}
                             >
                             </rect>
