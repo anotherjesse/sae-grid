@@ -1,8 +1,6 @@
 <script>
     export let featureMap;
-    export let run;
-
-    $: text = (run.response && run.response[0]) || [];
+    export let text=[];
 
     let selectedTokIdx = null;
     let selectedFeature = null;
@@ -16,6 +14,8 @@
 
     import { createEventDispatcher } from "svelte";
     const dispatch = createEventDispatcher();
+
+    $: console.log({text})
 
     $: strong_features = text
         .map(([tok, fs]) =>

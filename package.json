@@ -5,16 +5,19 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build-index": "node src/build_index.js",
+    "build-data": "node src/build_data.js",
     "build": "vite build --base=/sae-grid/ --outDir=docs",
     "preview": "vite preview"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^3.1.1",
-    "svelte": "^4.2.18",
-    "vite": "^5.3.1",
-    "tailwindcss": "^3.4.4",
+    "autoprefixer": "^10.4.19",
     "postcss": "^8.4.38",
-    "autoprefixer": "^10.4.19"
+    "svelte": "^4.2.18",
+    "tailwindcss": "^3.4.4",
+    "vite": "^5.3.1"
+  },
+  "dependencies": {
+    "replicate": "^0.30.2"
   }
 }

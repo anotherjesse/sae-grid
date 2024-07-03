@@ -4,6 +4,7 @@
   import Grid from "./lib/Grid.svelte";
   let featureMap = {};
   let runs = [];
+  let text = [];
   let selectedRun = null;
   let runData = {};
   let showSelector = false;
@@ -26,14 +27,20 @@
   }
 
   async function loadRuns() {
-    const response = await fetch("./data/index.json");
-    let allRuns = await response.json();
-    runs = allRuns.filter((run) => run.prompt);
+    const response = await fetch("./data/texts.json");
+    let texts = await response.json();
+    runs = Object.entries(texts).map(([id, text]) => ({
+      id,
+      title: text.slice(0, 40).split("\n")
+    }));
   }
 
   async function loadRunData() {
     const response = await fetch(`./data/${selectedRun}.json`);
     runData = await response.json();
+    console.log({runData})
+    text = runData[0]
+    console.log({text})
     // Update URL hash when run is loaded
     window.location.hash = selectedRun;
   }
@@ -66,8 +73,8 @@
   <title>SAE Feature Grid</title>
 </svelte:head>
 
-{#if runData && featureMap}
-  <Grid run={runData} {featureMap} on:switchText={handleSwitchText}></Grid>
+{#if text && featureMap}
+  <Grid text={text} {featureMap} on:switchText={handleSwitchText}></Grid>
 {/if}
 
 {#if showSelector}
@@ -86,9 +93,7 @@
       >
         <option value={null}>Select a run</option>
         {#each runs as run}
-          <option value={run.id} disabled={!run.ready}
-            >{run.prompt.slice(0, 40) || run.id}</option
-          >
+          <option value={run.id}>{run.title}</option>
         {/each}
       </select>
       <div class="flex justify-end">
